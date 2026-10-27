@@ -98,6 +98,7 @@ export function AssignWorkout() {
             {draft.exercises.map((p, i) => (
               <li key={p.exerciseId}>
                 {i + 1}. {exerciseById(p.exerciseId)?.name} — {p.sets} sets × {p.reps}
+                {p.weight && ` · ${p.weight}`}
               </li>
             ))}
           </ul>

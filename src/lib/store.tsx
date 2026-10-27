@@ -1,11 +1,4 @@
-import {
-  createContext,
-  useCallback,
-  useContext,
-  useMemo,
-  useState,
-  type ReactNode,
-} from "react";
+import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from "react";
 import {
   DAY_LABELS,
   exerciseById,
@@ -34,7 +27,7 @@ function isoOfShort(isoDate: string) {
 export function assignmentFor(
   assignments: Assignment[],
   clientId: string,
-  isoDate: string
+  isoDate: string,
 ): Assignment | null {
   return assignments.find((a) => a.clientId === clientId && assignmentApplies(a, isoDate)) ?? null;
 }
@@ -43,7 +36,7 @@ export function assignmentProgress(
   assignments: Assignment[],
   workouts: WorkoutPlan[],
   clientId: string,
-  isoDate: string
+  isoDate: string,
 ): { assignment: Assignment; total: number; done: number } | null {
   const assignment = assignmentFor(assignments, clientId, isoDate);
   if (!assignment) return null;
@@ -61,17 +54,18 @@ const plan = (
   id: string,
   name: string,
   clientId: string,
-  rows: [string, number, string, number][]
+  rows: [string, number, string, number, string?][],
 ): WorkoutPlan => ({
   id,
   name,
   clientId,
   createdAt: new Date().toISOString(),
-  exercises: rows.map(([exerciseId, sets, reps, restSec]) => ({
+  exercises: rows.map(([exerciseId, sets, reps, restSec, weight = ""]) => ({
     exerciseId,
     sets,
     reps,
     restSec,
+    weight,
   })),
 });
 
@@ -84,8 +78,8 @@ const seedWorkouts: WorkoutPlan[] = [
   ]),
   plan("w2", "Upper Body Push", "c2", [
     ["e1", 4, "12", 60],
-    ["e6", 3, "10", 60],
-    ["e5", 3, "12", 60],
+    ["e6", 3, "10", 60, "10 kg each hand"],
+    ["e5", 3, "12", 60, "10 kg each hand"],
   ]),
   plan("w3", "Gentle Mobility", "c3", [
     ["e4", 2, "10 each leg", 45],
@@ -95,7 +89,7 @@ const seedWorkouts: WorkoutPlan[] = [
   plan("w4", "Legs & Core", "c4", [
     ["e2", 4, "20", 60],
     ["e4", 3, "12 each leg", 60],
-    ["e8", 3, "8", 90],
+    ["e8", 3, "8", 90, "40 kg"],
     ["e3", 3, "45 sec", 45],
   ]),
 ];
@@ -144,9 +138,27 @@ const seedAssignments: Assignment[] = [
 ];
 
 const seedHistory: HistoryEntry[] = [
-  { id: "h1", clientId: "c1", workoutName: "Full Body Basics", date: "2026-10-25", completed: true },
-  { id: "h2", clientId: "c1", workoutName: "Full Body Basics", date: "2026-10-22", completed: true },
-  { id: "h3", clientId: "c1", workoutName: "Morning Mobility", date: "2026-10-19", completed: false },
+  {
+    id: "h1",
+    clientId: "c1",
+    workoutName: "Full Body Basics",
+    date: "2026-10-25",
+    completed: true,
+  },
+  {
+    id: "h2",
+    clientId: "c1",
+    workoutName: "Full Body Basics",
+    date: "2026-10-22",
+    completed: true,
+  },
+  {
+    id: "h3",
+    clientId: "c1",
+    workoutName: "Morning Mobility",
+    date: "2026-10-19",
+    completed: false,
+  },
   { id: "h4", clientId: "c2", workoutName: "Upper Body Push", date: "2026-10-24", completed: true },
   { id: "h5", clientId: "c2", workoutName: "Upper Body Push", date: "2026-10-21", completed: true },
   { id: "h6", clientId: "c3", workoutName: "Gentle Mobility", date: "2026-10-25", completed: true },
@@ -189,7 +201,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
         id: `c${Date.now()}`,
         name,
         goal,
-        joinedOn: new Date().toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }),
+        joinedOn: new Date().toLocaleDateString("en-IN", {
+          day: "numeric",
+          month: "short",
+          year: "numeric",
+        }),
       },
     ]);
   }, []);
@@ -217,16 +233,20 @@ export function AppProvider({ children }: { children: ReactNode }) {
         ...d,
         exercises: [
           ...d.exercises,
-          { exerciseId, sets: ex.defaultSets, reps: ex.defaultReps, restSec: ex.defaultRestSec },
+          {
+            exerciseId,
+            sets: ex.defaultSets,
+            reps: ex.defaultReps,
+            restSec: ex.defaultRestSec,
+            weight: "",
+          },
         ],
       };
     });
   }, []);
 
   const removeDraftExercise = useCallback((index: number) => {
-    setDraft((d) =>
-      d ? { ...d, exercises: d.exercises.filter((_, i) => i !== index) } : d
-    );
+    setDraft((d) => (d ? { ...d, exercises: d.exercises.filter((_, i) => i !== index) } : d));
   }, []);
 
   const moveDraftExercise = useCallback((from: number, to: number) => {
@@ -239,49 +259,43 @@ export function AppProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
-  const updateDraftExercise = useCallback(
-    (index: number, patch: Partial<PlannedExercise>) => {
-      setDraft((d) =>
-        d
-          ? {
-              ...d,
-              exercises: d.exercises.map((ex, i) => (i === index ? { ...ex, ...patch } : ex)),
-            }
-          : d
-      );
-    },
-    []
-  );
+  const updateDraftExercise = useCallback((index: number, patch: Partial<PlannedExercise>) => {
+    setDraft((d) =>
+      d
+        ? {
+            ...d,
+            exercises: d.exercises.map((ex, i) => (i === index ? { ...ex, ...patch } : ex)),
+          }
+        : d,
+    );
+  }, []);
 
-  const assign = useCallback(
-    (date: string, repeatDays: string[]) => {
-      setDraft((d) => {
-        if (!d) return d;
-        setWorkouts((prev) => [...prev, d]);
-        setAssignments((prev) => [
-          ...prev,
-          {
-            id: `a${Date.now()}`,
-            workoutId: d.id,
-            clientId: d.clientId,
-            date,
-            repeatDays,
-            completions: {},
-          },
-        ]);
-        return d; // keep draft so the success screen can show a summary
-      });
-    },
-    []
-  );
+  const assign = useCallback((date: string, repeatDays: string[]) => {
+    setDraft((d) => {
+      if (!d) return d;
+      setWorkouts((prev) => [...prev, d]);
+      setAssignments((prev) => [
+        ...prev,
+        {
+          id: `a${Date.now()}`,
+          workoutId: d.id,
+          clientId: d.clientId,
+          date,
+          repeatDays,
+          completions: {},
+        },
+      ]);
+      return d; // keep draft so the success screen can show a summary
+    });
+  }, []);
 
   const toggleCompletion = useCallback((assignmentId: string, exerciseId: string) => {
     setAssignments((prev) =>
       prev.map((a) =>
         a.id === assignmentId
           ? { ...a, completions: { ...a.completions, [exerciseId]: !a.completions[exerciseId] } }
-          : a
-      )
+          : a,
+      ),
     );
   }, []);
 
@@ -317,7 +331,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       updateDraftExercise,
       assign,
       toggleCompletion,
-    ]
+    ],
   );
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

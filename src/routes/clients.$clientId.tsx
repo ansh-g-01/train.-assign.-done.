@@ -58,7 +58,10 @@ function ClientProfile() {
 
   return (
     <main className="mx-auto min-h-screen w-full max-w-lg px-4 pb-16 pt-6">
-      <Link to="/" className="inline-flex items-center gap-2 text-sm font-semibold text-muted-foreground hover:text-foreground">
+      <Link
+        to="/"
+        className="inline-flex items-center gap-2 text-sm font-semibold text-muted-foreground hover:text-foreground"
+      >
         <ArrowLeft className="h-4 w-4" /> My Clients
       </Link>
 
@@ -120,6 +123,7 @@ function ClientProfile() {
               {currentPlan.exercises.map((ex) => (
                 <li key={ex.exerciseId}>
                   • {exerciseById(ex.exerciseId)?.name} — {ex.sets} sets × {ex.reps}
+                  {ex.weight && ` · ${ex.weight}`}
                 </li>
               ))}
             </ul>
@@ -188,11 +192,7 @@ function CreateWorkoutButton({ clientId, clientName }: { clientId: string; clien
         <Plus className="h-5 w-5" strokeWidth={2.5} />
         Create Workout for {clientName.split(" ")[0]}
       </button>
-      <Link
-        to="/trainee/$clientId"
-        params={{ clientId }}
-        className="btn-secondary"
-      >
+      <Link to="/trainee/$clientId" params={{ clientId }} className="btn-secondary">
         <ChevronRight className="h-5 w-5" /> View as {clientName.split(" ")[0]} sees it
       </Link>
     </div>

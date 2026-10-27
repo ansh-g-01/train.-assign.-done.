@@ -1,7 +1,9 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
-import { ArrowLeft, CheckCircle2, Circle, Timer } from "lucide-react";
+import { useState } from "react";
+import { ArrowLeft, CheckCircle2, Circle, Dumbbell, PlayCircle, Timer } from "lucide-react";
 import { Avatar } from "@/components/Avatar";
-import { exerciseById } from "@/data/sample";
+import { ExerciseDetail } from "@/components/ExerciseDetail";
+import { exerciseById, type PlannedExercise } from "@/data/sample";
 import { assignmentProgress, useApp } from "@/lib/store";
 import { todayISO } from "@/lib/dates";
 
@@ -22,6 +24,7 @@ export const Route = createFileRoute("/trainee/$clientId")({
 function TraineeWorkout() {
   const { clientId } = Route.useParams();
   const { clients, workouts, assignments, toggleCompletion } = useApp();
+  const [viewing, setViewing] = useState<PlannedExercise | null>(null);
   const client = clients.find((c) => c.id === clientId);
   if (!client) throw notFound();
 
@@ -50,8 +53,8 @@ function TraineeWorkout() {
         <div className="mt-10 rounded-2xl border border-dashed border-border bg-card px-6 py-12 text-center">
           <p className="text-lg font-semibold">No workout for today</p>
           <p className="mt-2 text-muted-foreground">
-            {firstName} has nothing assigned today. Create a workout from the client profile to
-            see it here.
+            {firstName} has nothing assigned today. Create a workout from the client profile to see
+            it here.
           </p>
           <Link to="/clients/$clientId" params={{ clientId: client.id }} className="btn-hero mt-6">
             Go to {firstName}'s profile
@@ -96,15 +99,22 @@ function TraineeWorkout() {
                       done ? "border-success bg-success/5" : "border-border"
                     }`}
                   >
-                    <div className="flex gap-4">
-                      <img
-                        src={ex.image}
-                        alt={`Demonstration of ${ex.name}`}
-                        loading="lazy"
-                        width={816}
-                        height={816}
-                        className={`h-28 w-28 shrink-0 rounded-xl object-cover ${done ? "opacity-70" : ""}`}
-                      />
+                    <button
+                      onClick={() => setViewing(planned)}
+                      aria-label={`How to do ${ex.name}`}
+                      className="flex w-full gap-4 text-left"
+                    >
+                      <div className="relative h-28 w-28 shrink-0">
+                        <img
+                          src={ex.image}
+                          alt={`Demonstration of ${ex.name}`}
+                          loading="lazy"
+                          width={816}
+                          height={816}
+                          className={`h-full w-full rounded-xl object-cover ${done ? "opacity-70" : ""}`}
+                        />
+                        <PlayCircle className="absolute bottom-1.5 right-1.5 h-7 w-7 rounded-full bg-black/50 text-white" />
+                      </div>
                       <div className="min-w-0 flex-1">
                         <p className="text-sm font-semibold text-muted-foreground">
                           Exercise {index + 1}
@@ -122,8 +132,16 @@ function TraineeWorkout() {
                         <p className="mt-0.5 flex items-center gap-1 text-sm text-muted-foreground">
                           <Timer className="h-4 w-4" /> Rest {planned.restSec} sec between sets
                         </p>
+                        {planned.weight && (
+                          <p className="mt-0.5 flex items-center gap-1 text-sm font-semibold text-foreground">
+                            <Dumbbell className="h-4 w-4" /> {planned.weight}
+                          </p>
+                        )}
+                        <p className="mt-1 text-sm font-semibold text-primary underline-offset-2">
+                          Tap to see how ›
+                        </p>
                       </div>
-                    </div>
+                    </button>
                     <button
                       onClick={() => toggleCompletion(progress.assignment.id, planned.exerciseId)}
                       aria-pressed={done}
@@ -146,6 +164,12 @@ function TraineeWorkout() {
           </ul>
         </>
       )}
+
+      <ExerciseDetail
+        exercise={viewing ? (exerciseById(viewing.exerciseId) ?? null) : null}
+        planned={viewing ?? undefined}
+        onOpenChange={(open) => !open && setViewing(null)}
+      />
 
       <p className="mt-8 text-center text-sm text-muted-foreground">
         Prototype — sample data only. Nothing is saved.

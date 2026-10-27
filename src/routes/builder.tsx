@@ -10,7 +10,8 @@ import {
   Search,
   Trash2,
 } from "lucide-react";
-import { exerciseLibrary } from "@/data/sample";
+import { ExerciseDetail } from "@/components/ExerciseDetail";
+import { exerciseLibrary, type Exercise } from "@/data/sample";
 import { useApp } from "@/lib/store";
 import { clientById } from "@/data/sample";
 
@@ -51,13 +52,14 @@ function WorkoutBuilder() {
   const [search, setSearch] = useState("");
   const dragFrom = useRef<number | null>(null);
   const [dragOver, setDragOver] = useState<number | null>(null);
+  const [viewing, setViewing] = useState<Exercise | null>(null);
 
   if (!draft || !client) return null;
 
   const firstName = client.name.split(" ")[0];
   const q = search.trim().toLowerCase();
   const filtered = exerciseLibrary.filter(
-    (ex) => !q || ex.name.toLowerCase().includes(q) || ex.bodyPart.toLowerCase().includes(q)
+    (ex) => !q || ex.name.toLowerCase().includes(q) || ex.bodyPart.toLowerCase().includes(q),
   );
   const addedIds = new Set(draft.exercises.map((e) => e.exerciseId));
 
@@ -89,6 +91,7 @@ function WorkoutBuilder() {
       {/* Exercise library */}
       <section className="mt-6">
         <h2 className="text-lg font-bold">Exercise Library</h2>
+        <p className="mt-1 text-sm text-muted-foreground">Tap an exercise to see how it's done.</p>
         <div className="relative mt-3">
           <Search className="pointer-events-none absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
           <input
@@ -108,18 +111,24 @@ function WorkoutBuilder() {
                 key={ex.id}
                 className="flex items-center gap-3 rounded-xl border border-border bg-card p-2.5"
               >
-                <img
-                  src={ex.image}
-                  alt={ex.name}
-                  loading="lazy"
-                  width={816}
-                  height={816}
-                  className="h-14 w-14 shrink-0 rounded-lg object-cover"
-                />
-                <div className="min-w-0 flex-1">
-                  <p className="truncate font-semibold">{ex.name}</p>
-                  <p className="text-sm text-muted-foreground">{ex.bodyPart}</p>
-                </div>
+                <button
+                  onClick={() => setViewing(ex)}
+                  aria-label={`How to do ${ex.name}`}
+                  className="flex min-w-0 flex-1 items-center gap-3 text-left"
+                >
+                  <img
+                    src={ex.image}
+                    alt={ex.name}
+                    loading="lazy"
+                    width={816}
+                    height={816}
+                    className="h-14 w-14 shrink-0 rounded-lg object-cover"
+                  />
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate font-semibold">{ex.name}</p>
+                    <p className="text-sm text-muted-foreground">{ex.bodyPart}</p>
+                  </div>
+                </button>
                 {added ? (
                   <span className="chip chip-success whitespace-nowrap">Added ✓</span>
                 ) : (
@@ -187,17 +196,23 @@ function WorkoutBuilder() {
                         className="h-5 w-5 shrink-0 cursor-grab text-muted-foreground"
                         aria-hidden="true"
                       />
-                      <img
-                        src={ex.image}
-                        alt={ex.name}
-                        loading="lazy"
-                        width={816}
-                        height={816}
-                        className="h-12 w-12 shrink-0 rounded-lg object-cover"
-                      />
-                      <p className="min-w-0 flex-1 truncate font-semibold">
-                        {index + 1}. {ex.name}
-                      </p>
+                      <button
+                        onClick={() => setViewing(ex)}
+                        aria-label={`How to do ${ex.name}`}
+                        className="flex min-w-0 flex-1 items-center gap-3 text-left"
+                      >
+                        <img
+                          src={ex.image}
+                          alt={ex.name}
+                          loading="lazy"
+                          width={816}
+                          height={816}
+                          className="h-12 w-12 shrink-0 rounded-lg object-cover"
+                        />
+                        <p className="min-w-0 flex-1 truncate font-semibold">
+                          {index + 1}. {ex.name}
+                        </p>
+                      </button>
                       <div className="flex shrink-0 flex-col gap-1">
                         <button
                           aria-label={`Move ${ex.name} up`}
@@ -249,6 +264,15 @@ function WorkoutBuilder() {
                           ))}
                         </select>
                       </label>
+                      <label className="basis-full text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                        Recommended weight for {firstName}
+                        <input
+                          value={planned.weight}
+                          onChange={(e) => updateDraftExercise(index, { weight: e.target.value })}
+                          placeholder={ex.weightHint}
+                          className="mt-1 block w-full rounded-lg border border-input bg-background px-3 py-2 text-base font-semibold normal-case tracking-normal text-foreground outline-none focus:ring-2 focus:ring-ring"
+                        />
+                      </label>
                       <button
                         aria-label={`Remove ${ex.name}`}
                         onClick={() => removeDraftExercise(index)}
@@ -264,6 +288,8 @@ function WorkoutBuilder() {
           </>
         )}
       </section>
+
+      <ExerciseDetail exercise={viewing} onOpenChange={(open) => !open && setViewing(null)} />
 
       {/* Sticky action bar */}
       <div className="fixed inset-x-0 bottom-0 border-t border-border bg-background/95 p-4 backdrop-blur">
