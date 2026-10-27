@@ -10,33 +10,80 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AssignRouteImport } from './routes/assign'
+import { Route as BuilderRouteImport } from './routes/builder'
+import { Route as ClientsClientIdRouteImport } from './routes/clients.$clientId'
+import { Route as TraineeClientIdRouteImport } from './routes/trainee.$clientId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AssignRoute = AssignRouteImport.update({
+  id: '/assign',
+  path: '/assign',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BuilderRoute = BuilderRouteImport.update({
+  id: '/builder',
+  path: '/builder',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ClientsClientIdRoute = ClientsClientIdRouteImport.update({
+  id: '/clients/$clientId',
+  path: '/clients/$clientId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TraineeClientIdRoute = TraineeClientIdRouteImport.update({
+  id: '/trainee/$clientId',
+  path: '/trainee/$clientId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/assign': typeof AssignRoute
+  '/builder': typeof BuilderRoute
+  '/clients/$clientId': typeof ClientsClientIdRoute
+  '/trainee/$clientId': typeof TraineeClientIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/assign': typeof AssignRoute
+  '/builder': typeof BuilderRoute
+  '/clients/$clientId': typeof ClientsClientIdRoute
+  '/trainee/$clientId': typeof TraineeClientIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/assign': typeof AssignRoute
+  '/builder': typeof BuilderRoute
+  '/clients/$clientId': typeof ClientsClientIdRoute
+  '/trainee/$clientId': typeof TraineeClientIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    '/' | '/assign' | '/builder' | '/clients/$clientId' | '/trainee/$clientId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to: '/' | '/assign' | '/builder' | '/clients/$clientId' | '/trainee/$clientId'
+  id:
+    | '__root__'
+    | '/'
+    | '/assign'
+    | '/builder'
+    | '/clients/$clientId'
+    | '/trainee/$clientId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AssignRoute: typeof AssignRoute
+  BuilderRoute: typeof BuilderRoute
+  ClientsClientIdRoute: typeof ClientsClientIdRoute
+  TraineeClientIdRoute: typeof TraineeClientIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +95,43 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/assign': {
+      id: '/assign'
+      path: '/assign'
+      fullPath: '/assign'
+      preLoaderRoute: typeof AssignRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/builder': {
+      id: '/builder'
+      path: '/builder'
+      fullPath: '/builder'
+      preLoaderRoute: typeof BuilderRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/clients/$clientId': {
+      id: '/clients/$clientId'
+      path: '/clients/$clientId'
+      fullPath: '/clients/$clientId'
+      preLoaderRoute: typeof ClientsClientIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/trainee/$clientId': {
+      id: '/trainee/$clientId'
+      path: '/trainee/$clientId'
+      fullPath: '/trainee/$clientId'
+      preLoaderRoute: typeof TraineeClientIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AssignRoute: AssignRoute,
+  BuilderRoute: BuilderRoute,
+  ClientsClientIdRoute: ClientsClientIdRoute,
+  TraineeClientIdRoute: TraineeClientIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
