@@ -1,4 +1,4 @@
-import { createFileRoute, Link, notFound } from "@tanstack/react-router";
+import { createFileRoute, Link, notFound, useNavigate } from "@tanstack/react-router";
 import {
   ArrowLeft,
   CheckCircle2,
@@ -175,12 +175,13 @@ function ClientProfile() {
 
 function CreateWorkoutButton({ clientId, clientName }: { clientId: string; clientName: string }) {
   const { startDraft } = useApp();
+  const navigate = useNavigate();
   return (
     <div className="mt-6 flex flex-col gap-3">
       <button
         onClick={() => {
           startDraft(clientId);
-          window.location.assign("/builder");
+          navigate({ to: "/builder" });
         }}
         className="btn-hero"
       >

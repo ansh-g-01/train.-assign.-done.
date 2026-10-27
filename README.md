@@ -54,3 +54,19 @@ cd <repository-name>
 npm i
 npm run dev
 ```
+
+## Hosting on GitHub Pages
+
+Every push to `main` builds a static version of the app and deploys it with
+[.github/workflows/deploy-pages.yml](.github/workflows/deploy-pages.yml).
+The site is served at `https://<user>.github.io/<repo-name>/`.
+
+One-time setup: in the repo go to **Settings → Pages** and set **Source** to **GitHub Actions**.
+
+To test the Pages build locally:
+
+```sh
+GITHUB_PAGES_BASE="/train.-assign.-done./" bun run build
+```
+
+The output is in `dist/client`. The workflow copies `_shell.html` to `index.html` and `404.html`.
